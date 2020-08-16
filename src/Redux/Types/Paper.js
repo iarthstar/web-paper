@@ -1,3 +1,6 @@
 export default {
   SAVE_PAPER: 'SAVE_PAPER',
+  NEW_PAPER: 'NEW_PAPER',
+  PREV_PAPER: 'PREV_PAPER',
+  NEXT_PAPER: 'NEXT_PAPER',
 };

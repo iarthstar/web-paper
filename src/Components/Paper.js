@@ -7,10 +7,11 @@ let color = null;
 let width = null;
 
 const Paper = (props) => {
-  
+
   const {
     strokeColor,
-    strokeWidth
+    strokeWidth,
+    json
   } = props;
 
   useEffect(() => {
@@ -24,19 +25,20 @@ const Paper = (props) => {
       path = new Path();
       path.strokeColor = color;
       path.strokeWidth = width;
+      path.strokeCap = 'round';
       path.strokeJoin = 'round';
-			path.add(point);
-		};
+      path.add(point);
+    };
 
-		tool.onMouseDrag = ({ point }) => {
+    tool.onMouseDrag = ({ point }) => {
       path.add(point);
     };
 
     tool.onMouseUp = () => {
-      const saved = project.activeLayer.exportJSON();
+      props.savePaper(project.activeLayer.exportJSON());
     };
-    
-  },[]);
+
+  }, []);
 
   useEffect(() => {
     color = strokeColor;
@@ -46,12 +48,19 @@ const Paper = (props) => {
     width = strokeWidth;
   }, [strokeWidth]);
 
+  useEffect(() => {
+    project.clear();
+    if (json) {
+      project.activeLayer.importJSON(json);
+    }
+  }, [json]);
+
   return (
     <Card elevation={8}>
-      <canvas 
-        id='paper' 
+      <canvas
+        id='paper'
         className='w-100 h-100'
-        data-paper-resize='true' 
+        data-paper-resize='true'
       />
     </Card>
   );

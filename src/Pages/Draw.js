@@ -1,117 +1,94 @@
 import React, { useState } from 'react';
+import { connect } from 'react-redux';
 import { makeStyles } from '@material-ui/core/styles';
 
 import Layout from '../Commons/Layout';
 import Paper from '../Components/Paper';
-import { Grid, Box } from '@material-ui/core';
+import { Grid, Box, Fab } from '@material-ui/core';
+import AddIcon from '@material-ui/icons/Add';
+import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
+import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 
 import SpeedDial from '@material-ui/lab/SpeedDial';
 import SpeedDialAction from '@material-ui/lab/SpeedDialAction';
-
-const colors = [
-  {
-    icon: <span className='color-circle' style={{ backgroundColor: 'royalblue' }} />,
-    name: 'Royal Blue',
-    value: '#4169E1'
-  },
-  {
-    icon: <span className='color-circle' style={{ backgroundColor: 'gold' }} />,
-    name: 'Gold',
-    value: '#FFD700'
-  },
-  {
-    icon: <span className='color-circle' style={{ backgroundColor: 'limegreen' }} />,
-    name: 'Lime Green',
-    value: '#32CD32'
-  },
-  {
-    icon: <span className='color-circle' style={{ backgroundColor: 'crimson' }} />,
-    name: 'Crimson',
-    value: '#DC143C'
-  },
-  {
-    icon: <span className='color-circle' style={{ backgroundColor: 'gainsboro' }} />,
-    name: 'Gains Boro',
-    value: '#DCDCDC'
-  },
-];
-
-const brushes = (color) => ([
-  {
-    icon: <span className='br-round' style={{ backgroundColor: color, width: '4px', height: '4px' }} />,
-    name: 'Royal Blue',
-    value: 2
-  },
-  {
-    icon: <span className='br-round' style={{ backgroundColor: color, width: '8px', height: '8px' }} />,
-    name: 'Gold',
-    value: 4
-  },
-  {
-    icon: <span className='br-round' style={{ backgroundColor: color, width: '12px', height: '12px' }} />,
-    name: 'Lime Green',
-    value: 8
-  },
-  {
-    icon: <span className='br-round' style={{ backgroundColor: color, width: '16px', height: '16px' }} />,
-    name: 'Crimson',
-    value: 12
-  },
-  {
-    icon: <span className='br-round' style={{ backgroundColor: color, width: '20px', height: '20px' }} />,
-    name: 'Gains Boro',
-    value: 16
-  },
-]);
+import { colors, brushes } from '../Constants';
+import { project } from 'paper';
+import { newPaper, prevPaper, nextPaper, savePaper } from '../Redux/Actions/Paper';
 
 const useStyles = makeStyles((theme) => ({
-  colorDial: {
+  // actionsDial: {
+  //   position: 'absolute',
+  //   bottom: theme.spacing(2),
+  //   right: theme.spacing(2),
+  // },
+  colorsDial: {
+    position: 'absolute',
+    bottom: theme.spacing(2),
+    left: theme.spacing(2),
+    '& button': {
+      backgroundColor: 'white'
+    },
+    '& button:hover': {
+      backgroundColor: 'white'
+    }
+  },
+  brushesDial: {
+    position: 'absolute',
+    bottom: theme.spacing(2),
+    left: theme.spacing(12),
+    '& button': {
+      backgroundColor: 'white'
+    },
+    '& button:hover': {
+      backgroundColor: 'white'
+    }
+  },
+  actions: {
     position: 'absolute',
     bottom: theme.spacing(2),
     right: theme.spacing(2),
-    '& button': {
-      backgroundColor: 'white'
-    },
-    '& button:hover': {
-      backgroundColor: 'white'
-    }
   },
-  brushDial: {
-    position: 'absolute',
-    bottom: theme.spacing(2),
-    right: theme.spacing(10),
-    '& button': {
-      backgroundColor: 'white'
-    },
-    '& button:hover': {
-      backgroundColor: 'white'
-    }
-  },
+  actionsFab: {
+    marginLeft: theme.spacing(2)
+  }
 }));
 
 const initDials = {
   'color': false,
-  'brush': false
+  'brush': false,
+  'actions': false
 };
 
-const Draw = () => {
+const Draw = (props) => {
   const classes = useStyles();
+
+  const {
+    currentPaper,
+    savePaper
+  } = props;
 
   const [dials, setDials] = useState(initDials);
   const [strokeColor, setStrokeColor] = useState('gold');
-  const [strokeWidth, setStrokeWidth] = useState(2);
+  const [strokeWidth, setStrokeWidth] = useState(8);
 
   const toggleDial = (name) => (state) => () => setDials({ ...dials, [name]: state });
-  const changeColor = (name) => (color) => () => {
-    setStrokeColor(color);
-    return toggleDial(name)(false);
-  }
 
-  const changeWidth = (name) => (width) => () => {
-    console.log(width);
-    setStrokeWidth(width);
-    return toggleDial(name)(false);
-  }
+  const handleDial = (name) => (value) => () => {
+    switch (name) {
+      case 'colors': setStrokeColor(value); break;
+      case 'brushes': setStrokeWidth(value); break;
+    }
+    return toggleDial(name)(false)();
+  };
+
+  const handleAction = (name) => () => {
+    switch (name) {
+      case 'NEW': props.newPaper(); break;
+      case 'PREV': props.prevPaper(); break;
+      case 'NEXT': props.nextPaper(); break;
+      case 'SAVE': props.savePaper(project.activeLayer.exportJSON()); break;
+    }
+  };
 
   const brushView = (
     <span
@@ -139,48 +116,68 @@ const Draw = () => {
         <Grid item xs={12}>
           <Box p={2}>
             <Paper
+              json={currentPaper}
               strokeColor={strokeColor}
               strokeWidth={strokeWidth}
+              savePaper={savePaper}
             />
           </Box>
         </Grid>
       </Grid>
       <SpeedDial
         ariaLabel="Colors SpeedDial"
-        className={classes.colorDial}
+        className={classes.colorsDial}
         icon={colorView}
-        onClose={toggleDial('color')(false)}
-        onOpen={toggleDial('color')(true)}
-        open={dials['color']}
+        onClose={toggleDial('colors')(false)}
+        onOpen={toggleDial('colors')(true)}
+        open={dials['colors']}
       >
         {colors.map((action, i) => (
           <SpeedDialAction
             key={i}
             icon={action.icon}
-            tooltipTitle={action.name}
-            onClick={changeColor('color')(action.value)}
+            onClick={handleDial('colors')(action.value)}
           />
         ))}
       </SpeedDial>
       <SpeedDial
         ariaLabel="Brush SpeedDial"
-        className={classes.brushDial}
+        className={classes.brushesDial}
         icon={brushView}
-        onClose={toggleDial('brush')(false)}
-        onOpen={toggleDial('brush')(true)}
-        open={dials['brush']}
+        onClose={toggleDial('brushes')(false)}
+        onOpen={toggleDial('brushes')(true)}
+        open={dials['brushes']}
       >
         {brushes(strokeColor).map((action) => (
           <SpeedDialAction
             key={action.name}
             icon={action.icon}
-            tooltipTitle={action.name}
-            onClick={changeWidth('brush')(action.value)}
+            onClick={handleDial('brushes')(action.value)}
           />
         ))}
       </SpeedDial>
+      <div className={classes.actions}>
+      <Fab className={classes.actionsFab} aria-label="prev" onClick={handleAction('PREV')}>
+          <ArrowBackIcon />
+        </Fab>
+        <Fab className={classes.actionsFab} aria-label="next"onClick={handleAction('NEXT')}>
+          <ArrowForwardIcon />
+        </Fab>
+        <Fab className={classes.actionsFab} color="secondary" aria-label="new" onClick={handleAction('NEW')}>
+          <AddIcon />
+        </Fab>
+      </div>
     </Layout>
   );
 };
 
-export default Draw;
+const mapStateToProps = state => ({
+  currentPaper: state.paper.currentPaper,
+});
+
+export default connect(mapStateToProps, {
+  newPaper,
+  prevPaper,
+  nextPaper,
+  savePaper
+})(Draw);
